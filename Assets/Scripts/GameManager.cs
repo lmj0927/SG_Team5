@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float brushScaleUpDuration = 1.0f;
 
     [Header("References")]
-    [SerializeField] private ColorAreaCalculator colorAreaCaculator;
+    [SerializeField] private ColorAreaCalculator colorAreaCalculator;
 
     private Texture2D backgroundCanvasTexture;
     private SpriteRenderer canvasRenderer;
@@ -35,7 +35,9 @@ public class GameManager : MonoBehaviour
     private float currentTimer;
     private int colorIndex = 0;
     private float mouseHoldTime = 0f;
+    private Vector2 mouseDownScreenPosition = Vector2.zero;
     private readonly Dictionary<int, float> touchHoldTimes = new Dictionary<int, float>();
+    private readonly Dictionary<int, (Color32 color, Vector2 position)> touchStartScreenPositions = new Dictionary<int, (Color32 color, Vector2 position)>();
 
     void Start()
     {
@@ -86,9 +88,9 @@ public class GameManager : MonoBehaviour
         );
         canvasRenderer.sprite = sprite;
 
-        if (colorAreaCaculator != null)
+        if (colorAreaCalculator != null)
         {
-            colorAreaCaculator.Initialize(pixelBuffer.Length, baseColor);
+            colorAreaCalculator.Initialize(pixelBuffer.Length);
         }
     }
 
@@ -118,17 +120,19 @@ public class GameManager : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             mouseHoldTime = 0f;
-            PaintAtScreenPosition(Input.mousePosition, brushRadius);
+            mouseDownScreenPosition = Input.mousePosition; // 홀드 동안 중심 좌표 고정
+            PaintAtScreenPosition(mouseDownScreenPosition, brushRadius, drawColor);
         }
         if (Input.GetMouseButton(0))
         {
             mouseHoldTime += Time.deltaTime;
             int scaledRadius = GetScaledBrushRadius(mouseHoldTime);
-            PaintAtScreenPosition(Input.mousePosition, scaledRadius);
+            PaintAtScreenPosition(mouseDownScreenPosition, scaledRadius, drawColor); // 드래그처럼 이동하며 그리지 않음
         }
         if (Input.GetMouseButtonUp(0))
         {
             mouseHoldTime = 0f;
+            mouseDownScreenPosition = Vector2.zero;
         }
 #endif
 
@@ -140,7 +144,8 @@ public class GameManager : MonoBehaviour
                 if (touch.phase == TouchPhase.Began)
                 {
                     touchHoldTimes[touch.fingerId] = 0f;
-                    PaintAtScreenPosition(touch.position, brushRadius);
+                    touchStartScreenPositions[touch.fingerId] = (drawColor, touch.position); // 홀드 동안 중심 좌표 고정
+                    PaintAtScreenPosition(touchStartScreenPositions[touch.fingerId].position, brushRadius, drawColor);
                 }
 
                 if (touch.phase == TouchPhase.Stationary || touch.phase == TouchPhase.Moved)
@@ -152,12 +157,16 @@ public class GameManager : MonoBehaviour
 
                     touchHoldTimes[touch.fingerId] += Time.deltaTime;
                     int scaledRadius = GetScaledBrushRadius(touchHoldTimes[touch.fingerId]);
-                    PaintAtScreenPosition(touch.position, scaledRadius);
+                    if (touchStartScreenPositions.TryGetValue(touch.fingerId, out var startPos))
+                    {
+                        PaintAtScreenPosition(startPos.position, scaledRadius, startPos.color);
+                    }
                 }
 
                 if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
                 {
                     touchHoldTimes.Remove(touch.fingerId);
+                    touchStartScreenPositions.Remove(touch.fingerId);
                 }
             }
 
@@ -173,11 +182,11 @@ public class GameManager : MonoBehaviour
         return Mathf.Max(1, Mathf.RoundToInt(brushRadius * scale));
     }
 
-    private void PaintAtScreenPosition(Vector2 screenPosition, int radius)
+    private void PaintAtScreenPosition(Vector2 screenPosition, int radius, Color32 color)
     {
         int centerX = Mathf.RoundToInt((screenPosition.x / Screen.width) * (textureWidth - 1));
         int centerY = Mathf.RoundToInt((screenPosition.y / Screen.height) * (textureHeight - 1));
-        PaintCircle(centerX, centerY, radius, drawColor);
+        PaintCircle(centerX, centerY, radius, color);
     }
 
     private void PaintCircle(int centerX, int centerY, int radius, Color32 targetColor)
@@ -211,9 +220,9 @@ public class GameManager : MonoBehaviour
                 pixelBuffer[index] = targetColor;
                 hasChanged = true;
 
-                if (colorAreaCaculator != null)
+                if (colorAreaCalculator != null)
                 {
-                    colorAreaCaculator.OnPixelColorChanged(oldColor, targetColor);
+                    colorAreaCalculator.OnPixelColorChanged(oldColor, targetColor);
                 }
             }
         }
@@ -225,10 +234,5 @@ public class GameManager : MonoBehaviour
 
         backgroundCanvasTexture.SetPixels32(pixelBuffer);
         backgroundCanvasTexture.Apply();
-
-        if (colorAreaCaculator != null)
-        {
-            colorAreaCaculator.LogColorRatio(targetColor);
-        }
     }
 }

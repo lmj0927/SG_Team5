@@ -13,9 +13,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Color32 drawColor = new Color32(255, 0, 0, 255);
     [SerializeField] private float maxBrushScale = 1.5f;
     [SerializeField] private float brushScaleUpDuration = 1.0f;
+    [SerializeField] private float changeColorTimer = 10f;
 
     [Header("References")]
     [SerializeField] private ColorAreaCalculator colorAreaCalculator;
+    [Header("GamePlay Settings")]
+    [SerializeField] private float gameplayDuration = 60f;
+    private float currentGameplayTime = 0f;
 
     private Texture2D backgroundCanvasTexture;
     private SpriteRenderer canvasRenderer;
@@ -30,15 +34,12 @@ public class GameManager : MonoBehaviour
         Color.blue,
         Color.magenta,
     };
-
-    [SerializeField] private float changeColorTimer = 10f;
     private float currentTimer;
     private int colorIndex = 0;
     private float mouseHoldTime = 0f;
     private Vector2 mouseDownScreenPosition = Vector2.zero;
-    private readonly Dictionary<int, float> touchHoldTimes = new Dictionary<int, float>();
     private readonly Dictionary<int, (Color32 color, Vector2 position)> touchStartScreenPositions = new Dictionary<int, (Color32 color, Vector2 position)>();
-
+    private Color32 currentColor = Color.white;
     void Start()
     {
         currentTimer = changeColorTimer;
@@ -121,13 +122,14 @@ public class GameManager : MonoBehaviour
         {
             mouseHoldTime = 0f;
             mouseDownScreenPosition = Input.mousePosition; // 홀드 동안 중심 좌표 고정
-            PaintAtScreenPosition(mouseDownScreenPosition, brushRadius, drawColor);
+            currentColor = drawColor;
+            PaintAtScreenPosition(mouseDownScreenPosition, brushRadius, currentColor);
         }
         if (Input.GetMouseButton(0))
         {
             mouseHoldTime += Time.deltaTime;
             int scaledRadius = GetScaledBrushRadius(mouseHoldTime);
-            PaintAtScreenPosition(mouseDownScreenPosition, scaledRadius, drawColor); // 드래그처럼 이동하며 그리지 않음
+            PaintAtScreenPosition(mouseDownScreenPosition, scaledRadius, currentColor); // 드래그처럼 이동하며 그리지 않음
         }
         if (Input.GetMouseButtonUp(0))
         {

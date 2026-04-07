@@ -137,4 +137,40 @@ public class ColorAreaCalculator : MonoBehaviour
 
         return (float)count / totalPixels * 100f;
     }
+
+    public void GetMostPaintedColors(List<Color32> results)
+    {
+        if (results == null)
+        {
+            return;
+        }
+
+        results.Clear();
+        int maxCount = 0;
+
+        foreach (var kvp in colorPixelCounts)
+        {
+            Color32 color = kvp.Key;
+            int count = kvp.Value;
+
+            // "칠해진 색" 기준이므로 배경색/0개는 제외
+            if (color.Equals(baseColor) || count <= 0)
+            {
+                continue;
+            }
+
+            if (count > maxCount)
+            {
+                maxCount = count;
+                results.Clear();
+                results.Add(color);
+                continue;
+            }
+
+            if (count == maxCount && maxCount > 0)
+            {
+                results.Add(color);
+            }
+        }
+    }
 }

@@ -290,6 +290,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ratioPanelUIPrefabs: {fileID: 4772564632536834134, guid: 4741b256bb20cec4dad41d97e6cdde87, type: 3}
   ratioPanelUIParent: {fileID: 1433384104}
+  reorderIntervalSeconds: 0.1
 --- !u!4 &561007304
 Transform:
   m_ObjectHideFlags: 0
@@ -526,8 +527,9 @@ MonoBehaviour:
     rgba: 4278190335
   maxBrushScale: 1.5
   brushScaleUpDuration: 1
-  colorAreaCalculator: {fileID: 561007303}
   changeColorTimer: 10
+  colorAreaCalculator: {fileID: 561007303}
+  gameplayDuration: 60
 --- !u!4 &696490789
 Transform:
   m_ObjectHideFlags: 0

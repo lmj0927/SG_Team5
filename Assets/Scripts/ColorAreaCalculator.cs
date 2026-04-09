@@ -5,81 +5,85 @@ public class ColorAreaCalculator : MonoBehaviour
 {
     private readonly Dictionary<Color32, int> colorPixelCounts = new Dictionary<Color32, int>();
     private int totalPixels;
+
+    /// <summary>픽셀별 즉시 UI 갱신 대신 모았다가 <see cref="FlushPendingPixelChanges"/>에서 한 번에 처리합니다.</summary>
+    private readonly List<(Color32 oldColor, Color32 newColor)> pendingPixelChanges = new List<(Color32, Color32)>(8192);
+    private readonly HashSet<Color32> touchedColorsScratch = new HashSet<Color32>();
     [SerializeField] private RatioPanelUI ratioPanelUIPrefabs;
     private Dictionary<Color32, RatioPanelUI> ratioPanelUIList = new Dictionary<Color32, RatioPanelUI>();
     [SerializeField] private Transform ratioPanelUIParent;
     private Color32 baseColor = Color.white;
-    
-    [Header("UI Ordering")]
-    [SerializeField] private float reorderIntervalSeconds = 0.1f;
-    private float lastReorderTime = -Mathf.Infinity;
 
     public void Initialize(int pixelCount)
     {
         totalPixels = pixelCount;
         colorPixelCounts.Clear();
         colorPixelCounts[baseColor] = pixelCount;
+        pendingPixelChanges.Clear();
     }
 
-    public void OnPixelColorChanged(Color32 oldColor, Color32 newColor)
+    /// <summary>그리기 루프에서 호출: 큐에만 쌓고, UI는 <see cref="FlushPendingPixelChanges"/>에서 처리합니다.</summary>
+    public void RegisterPixelColorChange(Color32 oldColor, Color32 newColor)
     {
         if (oldColor.Equals(newColor))
         {
             return;
         }
 
-        if (!colorPixelCounts.ContainsKey(oldColor))
-        {
-            colorPixelCounts[oldColor] = 0;
-
-            var instance = Instantiate(ratioPanelUIPrefabs, ratioPanelUIParent);
-            instance.Initialize(oldColor);
-            ratioPanelUIList[oldColor] = instance;
-            Debug.Log($"oldColor: {oldColor}");
-        }
-
-        if (!colorPixelCounts.ContainsKey(newColor))
-        {
-            colorPixelCounts[newColor] = 0;
-
-            var instance2 = Instantiate(ratioPanelUIPrefabs, ratioPanelUIParent);
-            instance2.Initialize(newColor);
-            ratioPanelUIList[newColor] = instance2;
-            Debug.Log($"newColor: {newColor}");
-        }
-
-        colorPixelCounts[oldColor] = Mathf.Max(0, colorPixelCounts[oldColor] - 1);
-        colorPixelCounts[newColor] += 1;
-
-        if (ratioPanelUIList.TryGetValue(oldColor, out RatioPanelUI ratioPanelUI))
-        {
-            ratioPanelUI.UpdateRatio(GetColorRatio(oldColor));
-
-        }
-        if (ratioPanelUIList.TryGetValue(newColor, out RatioPanelUI ratioPanelUI2))
-        {
-            ratioPanelUI2.UpdateRatio(GetColorRatio(newColor));
-        }
-
-        TryReorderPanelsByPixelCounts();
+        pendingPixelChanges.Add((oldColor, newColor));
     }
 
-    private void TryReorderPanelsByPixelCounts()
+    /// <summary>프레임 끝 등에서 한 번 호출해 누적된 색 변화를 집계·UI 반영합니다.</summary>
+    public void FlushPendingPixelChanges()
     {
-        // 픽셀 단위 변경이 매우 잦기 때문에 UI 정렬은 일정 간격으로만 수행합니다.
-        if (reorderIntervalSeconds <= 0f)
-        {
-            ReorderPanelsByPixelCounts();
-            return;
-        }
-
-        if (Time.time - lastReorderTime < reorderIntervalSeconds)
+        if (pendingPixelChanges.Count == 0)
         {
             return;
         }
 
-        lastReorderTime = Time.time;
+        foreach (var delta in pendingPixelChanges)
+        {
+            EnsureColorKeyAndPanel(delta.oldColor);
+            EnsureColorKeyAndPanel(delta.newColor);
+        }
+
+        foreach (var delta in pendingPixelChanges)
+        {
+            colorPixelCounts[delta.oldColor] = Mathf.Max(0, colorPixelCounts[delta.oldColor] - 1);
+            colorPixelCounts[delta.newColor] += 1;
+        }
+
+        touchedColorsScratch.Clear();
+        foreach (var delta in pendingPixelChanges)
+        {
+            touchedColorsScratch.Add(delta.oldColor);
+            touchedColorsScratch.Add(delta.newColor);
+        }
+
+        pendingPixelChanges.Clear();
+
+        foreach (var color in touchedColorsScratch)
+        {
+            if (ratioPanelUIList.TryGetValue(color, out RatioPanelUI panel))
+            {
+                panel.UpdateRatio(GetColorRatio(color));
+            }
+        }
+
         ReorderPanelsByPixelCounts();
+    }
+
+    private void EnsureColorKeyAndPanel(Color32 color)
+    {
+        if (colorPixelCounts.ContainsKey(color))
+        {
+            return;
+        }
+
+        colorPixelCounts[color] = 0;
+        var instance = Instantiate(ratioPanelUIPrefabs, ratioPanelUIParent);
+        instance.Initialize(color);
+        ratioPanelUIList[color] = instance;
     }
 
     private void ReorderPanelsByPixelCounts()
@@ -136,6 +140,23 @@ public class ColorAreaCalculator : MonoBehaviour
         }
 
         return (float)count / totalPixels * 100f;
+    }
+
+    /// <summary>
+    /// 캔버스를 단색으로 되돌린 뒤 집계·비율 UI를 처음 상태와 같이 맞출 때 사용합니다.
+    /// </summary>
+    public void ResetPanelsAndInitialize(int pixelCount)
+    {
+        foreach (var kvp in ratioPanelUIList)
+        {
+            if (kvp.Value != null)
+            {
+                Destroy(kvp.Value.gameObject);
+            }
+        }
+
+        ratioPanelUIList.Clear();
+        Initialize(pixelCount);
     }
 
     public void GetMostPaintedColors(List<Color32> results)

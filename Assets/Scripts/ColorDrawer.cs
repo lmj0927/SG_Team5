@@ -18,6 +18,7 @@ public class ColorDrawer : Singleton<ColorDrawer>
 
     [Header("References")]
     [SerializeField] private ColorAreaCalculator colorAreaCalculator;
+    [SerializeField] private Simulator simulator;
     [Header("GamePlay Settings")]
     [SerializeField] private float gameplayDuration = 60f;
     [Tooltip("종료 연출: 왼쪽 하단(0,0)에서 원 반지름이 초당 증가하는 속도(텍스처 픽셀 기준).")]
@@ -56,7 +57,7 @@ public class ColorDrawer : Singleton<ColorDrawer>
     };
     private float currentTimer;
     private int colorIndex = 0;
-    private float mouseHoldTime = 0f;
+    //private float mouseHoldTime = 0f;
     private Vector2 mouseDownScreenPosition = Vector2.zero;
     private readonly Dictionary<int, float> touchHoldTimes = new Dictionary<int, float>();
     private readonly Dictionary<int, (Color32 color, Vector2 position)> touchStartScreenPositions = new Dictionary<int, (Color32 color, Vector2 position)>();
@@ -78,6 +79,11 @@ public class ColorDrawer : Singleton<ColorDrawer>
         {
             SetVictoryTextAlpha(0f);
             victoryText.gameObject.SetActive(false);
+        }
+
+        if (simulator == null)
+        {
+            simulator = FindFirstObjectByType<Simulator>();
         }
     }
 
@@ -115,7 +121,7 @@ public class ColorDrawer : Singleton<ColorDrawer>
             return;
         }
 
-        HandleInput();
+        //HandleInput();
     }
 
     private void BeginDominantCoverEndgame()
@@ -215,6 +221,11 @@ public class ColorDrawer : Singleton<ColorDrawer>
             colorAreaCalculator.ResetPanelsAndInitialize(pixelBuffer.Length);
         }
 
+        if (simulator != null)
+        {
+            simulator.ResetRoundActors();
+        }
+
         gameplayPhase = CanvasGameplayPhase.Normal;
         currentGameplayTime = 0f;
     }
@@ -302,67 +313,67 @@ public class ColorDrawer : Singleton<ColorDrawer>
         );
     }
 
-    private void HandleInput()
-    {
-#if UNITY_EDITOR
-        if (Input.GetMouseButtonDown(0))
-        {
-            mouseHoldTime = 0f;
-            mouseDownScreenPosition = Input.mousePosition; // 홀드 동안 중심 좌표 고정
-            currentColor = drawColor;
-            PaintAtScreenPosition(mouseDownScreenPosition, brushRadius, currentColor);
-        }
-        if (Input.GetMouseButton(0))
-        {
-            mouseHoldTime += Time.deltaTime;
-            int scaledRadius = GetScaledBrushRadius(mouseHoldTime);
-            PaintAtScreenPosition(mouseDownScreenPosition, scaledRadius, currentColor); // 드래그처럼 이동하며 그리지 않음
-        }
-        if (Input.GetMouseButtonUp(0))
-        {
-            mouseHoldTime = 0f;
-            mouseDownScreenPosition = Vector2.zero;
-        }
-#endif
+//     private void HandleInput()
+//     {
+// #if UNITY_EDITOR
+//         if (Input.GetMouseButtonDown(0))
+//         {
+//             mouseHoldTime = 0f;
+//             mouseDownScreenPosition = Input.mousePosition; // 홀드 동안 중심 좌표 고정
+//             currentColor = drawColor;
+//             PaintAtScreenPosition(mouseDownScreenPosition, brushRadius, currentColor);
+//         }
+//         if (Input.GetMouseButton(0))
+//         {
+//             mouseHoldTime += Time.deltaTime;
+//             int scaledRadius = GetScaledBrushRadius(mouseHoldTime);
+//             PaintAtScreenPosition(mouseDownScreenPosition, scaledRadius, currentColor); // 드래그처럼 이동하며 그리지 않음
+//         }
+//         if (Input.GetMouseButtonUp(0))
+//         {
+//             mouseHoldTime = 0f;
+//             mouseDownScreenPosition = Vector2.zero;
+//         }
+// #endif
 
-#if UNITY_ANDROID || UNITY_IOS
-        if (Input.touchCount > 0)
-        {
-            foreach (var touch in Input.touches)
-            {
-                if (touch.phase == TouchPhase.Began)
-                {
-                    touchHoldTimes[touch.fingerId] = 0f;
-                    touchStartScreenPositions[touch.fingerId] = (drawColor, touch.position); // 홀드 동안 중심 좌표 고정
-                    PaintAtScreenPosition(touchStartScreenPositions[touch.fingerId].position, brushRadius, drawColor);
-                }
+// #if UNITY_ANDROID || UNITY_IOS
+//         if (Input.touchCount > 0)
+//         {
+//             foreach (var touch in Input.touches)
+//             {
+//                 if (touch.phase == TouchPhase.Began)
+//                 {
+//                     touchHoldTimes[touch.fingerId] = 0f;
+//                     touchStartScreenPositions[touch.fingerId] = (drawColor, touch.position); // 홀드 동안 중심 좌표 고정
+//                     PaintAtScreenPosition(touchStartScreenPositions[touch.fingerId].position, brushRadius, drawColor);
+//                 }
 
-                if (touch.phase == TouchPhase.Stationary || touch.phase == TouchPhase.Moved)
-                {
-                    if (!touchHoldTimes.ContainsKey(touch.fingerId))
-                    {
-                        touchHoldTimes[touch.fingerId] = 0f;
-                    }
+//                 if (touch.phase == TouchPhase.Stationary || touch.phase == TouchPhase.Moved)
+//                 {
+//                     if (!touchHoldTimes.ContainsKey(touch.fingerId))
+//                     {
+//                         touchHoldTimes[touch.fingerId] = 0f;
+//                     }
 
-                    touchHoldTimes[touch.fingerId] += Time.deltaTime;
-                    int scaledRadius = GetScaledBrushRadius(touchHoldTimes[touch.fingerId]);
-                    if (touchStartScreenPositions.TryGetValue(touch.fingerId, out var startPos))
-                    {
-                        PaintAtScreenPosition(startPos.position, scaledRadius, startPos.color);
-                    }
-                }
+//                     touchHoldTimes[touch.fingerId] += Time.deltaTime;
+//                     int scaledRadius = GetScaledBrushRadius(touchHoldTimes[touch.fingerId]);
+//                     if (touchStartScreenPositions.TryGetValue(touch.fingerId, out var startPos))
+//                     {
+//                         PaintAtScreenPosition(startPos.position, scaledRadius, startPos.color);
+//                     }
+//                 }
 
-                if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
-                {
-                    touchHoldTimes.Remove(touch.fingerId);
-                    touchStartScreenPositions.Remove(touch.fingerId);
-                }
-            }
+//                 if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
+//                 {
+//                     touchHoldTimes.Remove(touch.fingerId);
+//                     touchStartScreenPositions.Remove(touch.fingerId);
+//                 }
+//             }
 
-            return;
-        }
-#endif
-    }
+//             return;
+//         }
+// #endif
+//     }
 
     public int GetScaledBrushRadius(float holdTime)
     {
@@ -400,6 +411,42 @@ public class ColorDrawer : Singleton<ColorDrawer>
         }
 
         PaintCircle(centerX, centerY, radius, color, registerWithCalculator: true);
+    }
+
+    /// <summary>
+    /// AI 지각용 읽기 API: 월드 좌표의 현재 픽셀 색상을 반환합니다.
+    /// </summary>
+    public bool TryGetPixelColorAtWorld(Vector2 worldPosition, out Color32 color)
+    {
+        color = baseColor;
+        if (gameplayPhase != CanvasGameplayPhase.Normal)
+        {
+            return false;
+        }
+
+        if (!TryWorldToTexturePixel(worldPosition, out int px, out int py))
+        {
+            return false;
+        }
+
+        int index = py * textureWidth + px;
+        if (index < 0 || index >= pixelBuffer.Length)
+        {
+            return false;
+        }
+
+        color = pixelBuffer[index];
+        return true;
+    }
+
+    public bool IsBaseColor(Color32 color)
+    {
+        return color.Equals(baseColor);
+    }
+
+    public bool IsInNormalGameplayPhase()
+    {
+        return gameplayPhase == CanvasGameplayPhase.Normal;
     }
 
     /// <summary>

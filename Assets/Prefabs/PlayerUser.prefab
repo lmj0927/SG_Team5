@@ -75,7 +75,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 3
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.5294118, g: 0.5294118, b: 0.5294118, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -94,12 +94,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7651865215172040242}
-  - component: {fileID: 3892716543129876540}
-  - component: {fileID: 8551881587516680669}
+  - component: {fileID: 3892716543129876541}
   - component: {fileID: 7163998785319717353}
-  - component: {fileID: 8050357696110530422}
+  - component: {fileID: 2148728983604753468}
+  - component: {fileID: 8072468632260157496}
   m_Layer: 0
-  m_Name: SimulateUser
+  m_Name: PlayerUser
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -121,7 +121,7 @@ Transform:
   - {fileID: 5878676064170775109}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!50 &3892716543129876540
+--- !u!50 &3892716543129876541
 Rigidbody2D:
   serializedVersion: 4
   m_ObjectHideFlags: 0
@@ -131,7 +131,7 @@ Rigidbody2D:
   m_GameObject: {fileID: 4999011551205840416}
   m_BodyType: 1
   m_Simulated: 1
-  m_UseFullKinematicContacts: 1
+  m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
@@ -147,84 +147,7 @@ Rigidbody2D:
   m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 4
---- !u!114 &8551881587516680669
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4999011551205840416}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bfa2abc25b12f0c48a26488bdac9b996, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  stride: 1
-  color:
-    serializedVersion: 2
-    rgba: 4278190335
-  role: 0
-  strideRate: 1
-  viewportEdgeInset: 0
-  separationQueryRadius: 0.5
-  separationPushStrength: 2.2
-  maxSeparationSpeed: 6.5
-  separationSharpness: 6
-  rotationSharpness: 4.5
-  boundaryProximityFalloffDistance: 1.2
-  wallRepulsionStrength: 1.1
-  wallEscapeTriggerViewport: 0.08
-  boundaryRiskStartProximity: 0.18
-  boundaryRiskPenaltyWeight: 1.25
-  outwardHeadingPenaltyWeight: 0.95
-  nearBoundaryThinkInterval: 0.08
-  boundaryRecoverEnterProximity: 0.38
-  boundaryRecoverExitProximity: 0.22
-  boundaryRecoverMinHoldTime: 0.28
-  boundaryRecoverInwardPriorityWeight: 1.1
-  boundaryRecoverThinkInterval: 0.06
-  facingDesiredWeight: 0.85
-  thinkInterval: 0.2
-  perceptionRadius: 2.3
-  directionSampleCount: 12
-  radialSampleCount: 3
-  intentSharpness: 10
-  denyEnemyWeight: 1.6
-  denyNeutralWeight: 0.25
-  coverageEnemyWeight: 1
-  coverageNeutralWeight: 0.8
-  coverageBasePriorityMultiplier: 2
-  coverageCenterAttractWeight: 1.15
-  coverageProgressWeight: 0.45
-  coverageSideLockDuration: 0.28
-  coverageSideSwitchMargin: 0.15
-  coverageOppositeSidePenalty: 0.2
-  defendBoundaryWeight: 2
-  defendNeutralWeight: 0.2
-  defenderThreatDetectRadius: 2.2
-  defenderThreatSampleCount: 16
-  defenderEnterThreatThreshold: 0.22
-  defenderExitThreatThreshold: 0.1
-  defenderMinDefendHoldTime: 0.55
-  defenderTargetAttractWeight: 1.35
-  defenderEnemyEngageWeight: 1.15
-  collisionLookAheadDistance: 0.55
-  collisionQueryRadius: 0.75
-  collisionPenaltyWeight: 0.9
-  coverageCollisionPenaltyScale: 0.65
-  defenderCollisionPenaltyScale: 0.85
-  imminentCollisionRiskThreshold: 1.1
-  emergencyReplanCooldown: 0.16
-  evadeEnterRiskThreshold: 1.2
-  evadeExitRiskThreshold: 0.75
-  evadeHoldTime: 0.3
-  evadeTurnBias: 0.9
-  evadeReplanCooldown: 0.1
-  stuckSpeedThreshold: 0.12
-  stuckTimeToRecover: 0.45
-  stuckRecoverDuration: 0.25
-  stuckRecoverBoost: 1.4
+  m_Constraints: 0
 --- !u!212 &7163998785319717353
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -267,7 +190,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 3
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.5283019, g: 0.5283019, b: 0.5283019, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -277,7 +200,30 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!58 &8050357696110530422
+--- !u!114 &2148728983604753468
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4999011551205840416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df199b13add95924aaa3b1b60c3b5cef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 1
+  color:
+    serializedVersion: 2
+    rgba: 4278190335
+  strideRate: 1
+  viewportEdgeInset: 0
+  wallEscapeTriggerViewport: 0.08
+  wallRepulsionStrength: 1.1
+  separationQueryRadius: 0.5
+  separationPushStrength: 6
+  maxSeparationSpeed: 10
+--- !u!58 &8072468632260157496
 CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

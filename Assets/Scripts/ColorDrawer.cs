@@ -28,7 +28,8 @@ public class ColorDrawer : Singleton<ColorDrawer>
     [SerializeField] private float victoryFadeInDuration = 1f;
     [Tooltip("Victory를 띄운 뒤 리셋까지 대기 시간(초)")]
     [SerializeField] private float victoryResetDelaySeconds = 2f;
-    private float currentGameplayTime = 0f;
+    [SerializeField] private TMP_Text playTimerText;
+    private float currentGameplayTime;
 
     private enum CanvasGameplayPhase
     {
@@ -85,6 +86,8 @@ public class ColorDrawer : Singleton<ColorDrawer>
         {
             simulator = FindFirstObjectByType<Simulator>();
         }
+
+        currentGameplayTime = gameplayDuration;
     }
 
     void Update()
@@ -114,8 +117,10 @@ public class ColorDrawer : Singleton<ColorDrawer>
             drawColor = colorList[colorIndex];
         }
 
-        currentGameplayTime += Time.deltaTime;
-        if (gameplayDuration > 0f && currentGameplayTime >= gameplayDuration)
+        currentGameplayTime -= Time.deltaTime;
+        int totalCentiseconds = Mathf.FloorToInt(Mathf.Max(0f, currentGameplayTime) * 100f);
+        playTimerText.text = $"{totalCentiseconds / 100:00}:{totalCentiseconds % 100:00}";
+        if (currentGameplayTime <= 0f)
         {
             BeginDominantCoverEndgame();
             return;
@@ -227,7 +232,7 @@ public class ColorDrawer : Singleton<ColorDrawer>
         }
 
         gameplayPhase = CanvasGameplayPhase.Normal;
-        currentGameplayTime = 0f;
+        currentGameplayTime = gameplayDuration;
     }
 
     private void SetVictoryTextAlpha(float alpha)

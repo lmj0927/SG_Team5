@@ -582,7 +582,7 @@ MonoBehaviour:
   changeColorTimer: 10
   colorAreaCalculator: {fileID: 561007303}
   simulator: {fileID: 459054935}
-  gameplayDuration: 60
+  gameplayDuration: 300
   dominantCoverRadiusPerSecond: 900
   victoryText: {fileID: 1099256665}
   victoryFadeInDuration: 1

@@ -118,8 +118,8 @@ public class ColorDrawer : Singleton<ColorDrawer>
         }
 
         currentGameplayTime -= Time.deltaTime;
-        int totalCentiseconds = Mathf.FloorToInt(Mathf.Max(0f, currentGameplayTime) * 100f);
-        playTimerText.text = $"{totalCentiseconds / 100:00}:{totalCentiseconds % 100:00}";
+        int totalSeconds = Mathf.FloorToInt(Mathf.Max(0f, currentGameplayTime));
+        playTimerText.text = $"{totalSeconds / 60:00}:{totalSeconds % 60:00}";
         if (currentGameplayTime <= 0f)
         {
             BeginDominantCoverEndgame();
